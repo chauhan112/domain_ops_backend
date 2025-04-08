@@ -65,19 +65,21 @@ async def update_logger(infos: LoggerUpdate):
     if not ss.handlers.exists(infos.name, infos.loc):
         raise CatNotFound("logger")
     try:
+        
         ss.handlers.update(infos.name, infos.loc, infos.new_name, infos.domains, infos.operation)
         return {"logger": infos.name, "status": "updated"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @app.post("/{category}/create/", response_model=dict)
 async def create_domain(category: str, infos: Category):
-    print("category create")
+    print(f"{category} create")
     ss = get_handler(category)
     if ss.handlers.nameExists(infos.name, infos.loc):
         raise HTTPException(status_code=400, detail="name already exists")
     try:
-        ss.handlers.create(infos.name, infos.loc)
+        idd = ss.handlers.create(infos.name, infos.loc)
         return {category: infos.name, "status": "created", "id": idd}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
