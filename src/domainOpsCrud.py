@@ -30,6 +30,9 @@ def GenericCategory():
                 return True
         return False
     def readProperties(idd, loc):
+        if not s.process.model.exists(loc + [s.process.category, idd, PROP]):
+            s.process.model.add(loc + [s.process.category, idd, PROP], {})
+            return {}
         return s.process.model.read(loc + [s.process.category, idd, PROP])
     def addNewProperty(idd, loc, key, value):
         s.process.model.add(loc + [s.process.category, idd, PROP, key], value)
@@ -63,24 +66,32 @@ def DomainOpsLoggerCRUD():
             raise Exception("Domains cannot be empty")
         cat = s.process.logger.process.category
         NAME = s.process.logger.process.NAME
+        OPERATION = "operation"
+        DOMAINS = "domains"
         idd = CryptsDB.generateUniqueId()
         s.process.model.add(loc + [cat, idd], 
-            {NAME: name, "domains": doms, "operations": opId, "id": idd} )
+            {NAME: name, OPERATION: opId, DOMAINS: doms, "id": idd} )
         return idd
     def update_logger(idd, loc, name=None, doms=None, opId=None):
         if name is None and doms is None and opId is None:
             return
-        if len(doms) == 0:
-            raise Exception("Domains cannot be empty")
+        
         cat = s.process.logger.process.category
         NAME = s.process.logger.process.NAME
+        OPERATION = "operation"
+        DOMAINS = "domains"
         data = s.process.model.read(loc + [cat, idd])
+        
+        if len(data["domains"]) == 0 and doms is None:
+            raise ValueError("Domains cannot be empty")
+        if opId is None and data[OPERATION] is None:
+            raise ValueError("Operations cannot be empty")
         if name is not None:
             data[NAME] = name
         if doms is not None:
-            data["domains"] = doms
-        if opIds is not None:
-            data["operations"] = opIds
+            data[DOMAINS] = doms
+        if opId is not None:
+            data[OPERATION] = opId
         s.process.model.add(loc + [cat, idd], data )
     logger.handlers.update = update_logger
     logger.handlers.create = create_logger
